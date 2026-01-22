@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Smart Parking</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <link rel="stylesheet" href="./assets/styles.css"/>
+</head>
+
+<body>
+  <!-- AUTH -->
+  <div class="auth-wrap" id="authView">
+    <button class="theme-toggle" id="btnThemeToggleAuth" title="Toggle theme" style="position:fixed;top:20px;right:20px;">🌙</button>
+    <div class="auth-shell">
+      <div class="brand">
+        <h1>🅿️ Smart Parking</h1>
+        <p>
+          Park faster, pay instantly. The easiest way to find and pay for parking in Beirut.
+          <br/><br/>
+          <b>Pricing:</b> Entry Fee based on location, and an Hourly fee after that (also based on location).
+        </p>
+        <div class="spec">
+          <span class="chip"><span class="dot"></span>Real-time availability</span>
+          <span class="chip"><span class="dot"></span>Interactive maps</span>
+          <span class="chip"><span class="dot"></span>Instant payment</span>
+        </div>
+      </div>
+
+      <div class="auth-card">
+        <div class="tabs">
+          <button id="tabLogin" class="active">Login</button>
+          <button id="tabReg">Register</button>
+        </div>
+
+        <div id="loginBox">
+          <label>Email</label>
+          <input id="login_email" type="email" placeholder="name@email.com"/>
+          <label>Password</label>
+          <input id="login_pass" type="password" placeholder="password"/>
+
+          <div class="btnrow">
+            <button class="btn" id="btnLogin">Login</button>
+            <button class="btn secondary" id="btnDemo">Demo Fill</button>
+          </div>
+          <div id="login_msg" class="msg"></div>
+        </div>
+
+        <div id="regBox" class="hidden">
+          <div class="row">
+            <div class="col">
+              <label>Full Name</label>
+              <input id="reg_name" type="text" placeholder="Reina Nizam"/>
+            </div>
+            <div class="col">
+              <label>Phone</label>
+              <input id="reg_phone" type="text" placeholder="########"/>
+            </div>
+          </div>
+
+          <label>Email</label>
+          <input id="reg_email" type="email" placeholder="name@email.com"/>
+          <label>Password</label>
+          <input id="reg_pass" type="password" placeholder="create password"/>
+
+          <button class="btn" id="btnRegister" style="margin-top:14px;">Create account</button>
+          <div id="reg_msg" class="msg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div class="app" id="appView">
+    <div class="topbar">
+      <div class="title">
+        <div class="logoMark"></div>
+        <div>Smart Parking</div>
+      </div>
+      <div class="right">
+        <span class="pill" id="driverPill">Driver</span>
+        <span class="pill" id="lotPill">Lot</span>
+        <span class="pill" id="spotPill">Spot</span>
+        <button class="theme-toggle" id="btnThemeToggle" title="Toggle theme">🌙</button>
+        <button class="btn secondary" id="btnLogout" style="padding:10px 12px;">Logout</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="sidebar">
+        <button class="navbtn" data-panel="vehicles">🚗 Vehicles <span>›</span></button>
+        <button class="navbtn" data-panel="lots">🅿️ Nearby Lots <span>›</span></button>
+        <button class="navbtn" data-panel="spots">📍 Spot Selection <span>›</span></button>
+        <button class="navbtn" data-panel="logs">📋 History <span>›</span></button>
+        <button class="navbtn" data-panel="pay">💳 Payment <span>›</span></button>
+        <button class="navbtn" data-panel="find">🔍 Find My Car <span>›</span></button>
+        <button class="navbtn" data-panel="about">ℹ️ About Us <span>›</span></button>
+
+        <div class="navhint">
+          <b>Note:</b> Payment is simulated. After exit, go to Payment tab to mark paid.
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- VEHICLES -->
+        <div class="card panel" id="panel_vehicles">
+          <h2>Vehicles</h2>
+          <div class="sub">Add at least one vehicle to continue.</div>
+
+          <div class="row" style="margin-top:12px;">
+            <div class="col"><label>Plate Number *</label><input id="veh_plate" placeholder="ABC123"/></div>
+            <div class="col"><label>Model</label><input id="veh_model" placeholder="Toyota Corolla"/></div>
+
+            <div class="col">
+            <label>Type</label>
+            <input id="veh_type" list="veh_type_list" placeholder="Sedan (or pick from list)"/>
+            <datalist id="veh_type_list">
+            <option value="Compact car"></option>
+            <option value="Sedan"></option>
+            <option value="SUV"></option>
+            <option value="Hatchback"></option>
+            <option value="Motorcycle"></option>
+            <option value="Pickup"></option>
+            <option value="Van"></option>
+            <option value="Coupe"></option>
+            </datalist>
+            </div>
+
+            <div class="col"><label>Year</label><input id="veh_year" type="number" min="1970" max="2035" placeholder="2020"/></div>
+          </div>
+
+          <div class="btnrow" style="margin-top:12px;">
+            <button class="btn blue" id="btnAddVehicle">Add Vehicle</button>
+            <button class="btn secondary" id="btnRefreshVehicles">Refresh List</button>
+            <button class="btn" id="btnGoLots">Continue to Lots →</button>
+          </div>
+          <div id="veh_msg" class="msg"></div>
+
+          <div style="margin-top:12px; overflow:auto;">
+            <table>
+             <thead><tr><th>Plate</th><th>Model</th><th>Type</th><th>Year</th><th>Action</th></tr></thead>
+              <tbody id="veh_tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- LOTS -->
+        <div class="card panel hidden" id="panel_lots">
+          <h2>Nearby Lots</h2>
+          <div class="sub">Pick a lot to view spots. Green=available, Orange=reserved, Red=occupied/full.</div>
+
+          <div class="grid2" style="margin-top:12px;">
+            <div>
+              <div class="lots" id="lotsList"></div>
+              <div id="lots_msg" class="msg"></div>
+            </div>
+            <div>
+              <div class="mapBox" id="lotsMap"></div>
+              <div class="sub" style="margin-top:10px;">Tip: click a marker or lot card.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SPOTS -->
+        <div class="card panel hidden" id="panel_spots">
+          <div class="row" style="align-items:end;">
+            <div class="col">
+              <h2 style="margin:0 0 6px;">Spot Selection</h2>
+              <div class="sub" id="spotLotInfo">Select a lot first.</div>
+              <div class="sub" style="margin-top:6px;">
+                <span style="display:inline-block;width:12px;height:12px;background:rgba(16,185,129,0.5);border-radius:3px;margin-right:4px;"></span> Available
+                <span style="display:inline-block;width:12px;height:12px;background:rgba(245,158,11,0.5);border-radius:3px;margin-left:12px;margin-right:4px;"></span> Reserved
+                <span style="display:inline-block;width:12px;height:12px;background:rgba(239,68,68,0.5);border-radius:3px;margin-left:12px;margin-right:4px;"></span> Occupied
+              </div>
+            </div>
+            <div class="col">
+              <label>Select Your Vehicle *</label>
+              <select id="vehicleSelect"></select>
+            </div>
+          </div>
+
+          <div class="btnrow" style="margin-top:12px;">
+            <button class="btn blue" id="btnStartSession">Start Parking Session</button>
+            <button class="btn secondary" id="btnBackToLots">← Back to Lots</button>
+          </div>
+          <div id="spots_msg" class="msg"></div>
+
+          <div id="spotGridWrap" style="margin-top:12px;">
+            <div id="spotGrid" class="spotGrid"></div>
+          </div>
+
+        </div>
+
+        <!-- LOGS -->
+        <div class="card panel hidden" id="panel_logs">
+          <h2>📋 Parking History</h2>
+          <div class="sub">Shows ACTIVE / UNPAID / PAID sessions.</div>
+
+          <div class="btnrow" style="margin-top:12px;">
+            <button class="btn blue" id="btnLoadLogs">Refresh History</button>
+          </div>
+          <div id="logs_msg" class="msg"></div>
+
+          <div style="margin-top:12px; overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Log ID</th><th>Plate</th><th>Lot</th><th>Spot</th>
+                  <th>Entry</th><th>Exit</th><th>Fee</th><th>Status</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="logs_tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PAYMENT -->
+        <div class="card panel hidden" id="panel_pay">
+          <h2>💳 Payment</h2>
+          <div class="sub">Simulated payment: it just marks the log as PAID.</div>
+
+          <div class="btnrow" style="margin-top:10px;">
+            <button class="btn" id="btnPayAll">Pay All Due</button>
+            <button class="btn secondary" id="btnRefreshDue">Refresh Due</button>
+          </div>
+          <div id="due_list" class="sub" style="margin-top:10px;"></div>
+
+          <hr class="hr"/>
+
+          <!-- Saved Cards Section -->
+          <div style="margin-top:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <label style="margin:0; font-weight:600;">💳 Saved Cards</label>
+              <button class="btn secondary" id="btnToggleAddCard" style="padding:6px 12px; font-size:12px;">+ Add New Card</button>
+            </div>
+            <div id="savedCardsList" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;"></div>
+          </div>
+
+          <!-- Add New Card Form (hidden by default) -->
+          <div id="addCardForm" class="hidden" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px; margin-bottom:16px;">
+            <div style="font-weight:600; margin-bottom:12px;">Add New Card</div>
+            <div class="row">
+              <div class="col"><label>Card Nickname</label><input id="new_card_name" placeholder="e.g. My Visa"/></div>
+              <div class="col"><label>Card Number *</label><input id="new_card_number" placeholder="4000 1234 5678 9010" maxlength="19"/></div>
+            </div>
+            <div class="row">
+              <div class="col"><label>Expiry (MM/YY) *</label><input id="new_card_exp" placeholder="12/28" maxlength="5"/></div>
+              <div class="col"><label>CVV *</label><input id="new_card_cvv" placeholder="123" maxlength="4"/></div>
+              <div class="col">
+                <label>Card Type</label>
+                <select id="new_card_type">
+                  <option value="VISA">VISA</option>
+                  <option value="MASTERCARD">Mastercard</option>
+                  <option value="AMEX">Amex</option>
+                </select>
+              </div>
+            </div>
+            <div class="btnrow" style="margin-top:12px;">
+              <button class="btn blue" id="btnSaveCard">Save Card</button>
+              <button class="btn secondary" id="btnCancelAddCard">Cancel</button>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:24px; margin-top:16px; flex-wrap:wrap;">
+            <!-- Visual Credit Card -->
+            <div id="cardVisual" style="
+              width: 320px;
+              height: 190px;
+              background: linear-gradient(135deg, #1a4b8c 0%, #2d6bc4 50%, #1e5aab 100%);
+              border-radius: 16px;
+              padding: 20px;
+              color: white;
+              font-family: 'Courier New', monospace;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+              position: relative;
+              flex-shrink: 0;
+              cursor: pointer;
+              transition: transform 0.2s, box-shadow 0.2s;
+              display: flex;
+              flex-direction: column;
+              box-sizing: border-box;
+            ">
+              <!-- Card Nickname -->
+              <div id="cardDisplayName" style="font-size:11px; opacity:0.8; font-family:Arial; margin-bottom:8px;">Demo Visa</div>
+              
+              <!-- Chip -->
+              <div style="
+                width: 45px;
+                height: 35px;
+                background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
+                border-radius: 6px;
+                margin-bottom: 15px;
+              "></div>
+              
+              <!-- Card Number -->
+              <div id="cardDisplayNumber" style="
+                font-size: 20px;
+                letter-spacing: 3px;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+              ">•••• •••• •••• ••••</div>
+              
+              <!-- Bottom Row -->
+              <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:auto;">
+                <div>
+                  <div style="font-size:9px; opacity:0.7; margin-bottom:2px;">VALID THRU</div>
+                  <div id="cardDisplayExp" style="font-size:14px;">••/••</div>
+                </div>
+                <div>
+                  <div style="font-size:9px; opacity:0.7; margin-bottom:2px;">CVV</div>
+                  <div id="cardDisplayCvv" style="font-size:14px;">•••</div>
+                </div>
+                <div id="cardDisplayType" style="font-size:22px; font-weight:bold; font-style:italic; font-family:Arial;">VISA</div>
+              </div>
+            </div>
+
+            <!-- Form Fields -->
+            <div style="flex:1; min-width:280px;">
+              <div class="row">
+                <div class="col">
+                  <label>Log ID (single payment)</label>
+                  <input id="pay_log_id" placeholder="Enter log ID" type="number"/>
+                </div>
+                <div class="col">
+                  <label>Card Number *</label>
+                  <input id="pay_cc" placeholder="Select or enter card" maxlength="19"/>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col"><label>Expiry (MM/YY) *</label><input id="pay_exp" placeholder="MM/YY" maxlength="5"/></div>
+                <div class="col"><label>CVC *</label><input id="pay_cvv" placeholder="123" maxlength="4"/></div>
+              </div>
+
+              <div class="btnrow" style="margin-top:12px;">
+                <button class="btn blue" id="btnPayOne">Pay Selected Log</button>
+              </div>
+            </div>
+          </div>
+          <div id="pay_msg" class="msg"></div>
+        </div>
+
+        <!-- FIND -->
+        <div class="card panel hidden" id="panel_find">
+          <h2>🔍 Find My Car</h2>
+          <div class="sub">Shows where your ACTIVE session is.</div>
+          <div class="row" style="margin-top:12px; align-items:end;">
+            <div class="col"><label>Plate</label><input id="findPlate" placeholder="ABC123"/></div>
+            <div class="col"><button class="btn blue" id="btnFind">Search</button></div>
+          </div>
+          <div id="find_msg" class="msg"></div>
+          <div class="mapBox" id="findMap" style="margin-top:12px;"></div>
+        </div>
+
+        <!-- ABOUT -->
+        <div class="card panel hidden" id="panel_about">
+          <h2>ℹ️ About Us</h2>
+          <div class="sub">
+            <b>Smart Parking</b> is a full-stack web application built for our <b>Database Course</b> final project.
+            <br/><br/>
+            This system demonstrates real-world database concepts including:
+            <ul style="margin:10px 0 10px 20px; line-height:1.8;">
+              <li>Relational database design (MariaDB/MySQL)</li>
+              <li>Foreign key constraints & triggers</li>
+              <li>CRUD operations via REST API</li>
+              <li>User authentication with hashed passwords</li>
+              <li>Transaction logging & payment simulation</li>
+            </ul>
+            <b>Features:</b> Reserve a spot, start a parking session, exit to compute fees, then pay.
+            <br/><br/>
+            <span style="color:var(--accent);">📍 Beirut parking lots • 🚗 Simulated sensors • 💳 Payment simulation</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="./assets/app.js"></script>
+</body>
+</html>
