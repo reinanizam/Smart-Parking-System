@@ -1,9 +1,6 @@
-# Smart-Parking-System
-Full-stack Smart Parking System demonstrating relational database design, secure user authentication, real-time parking spot management, and payment simulation using Node.js, Express, and MySQL/MariaDB.
+# Smart Parking System
 
-# 🅿️ Smart Parking System
-
-A full-stack web application for managing parking lots, reservations, and payments. Built as a Database Course final project demonstrating relational database design and CRUD operations.
+A full-stack web application for managing parking lots, reservations, and payments. Built as a Database Course final project demonstrating relational database design and CRUD operations using Node.js, Express, and MySQL/MariaDB.
 
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat&logo=mysql&logoColor=white)
